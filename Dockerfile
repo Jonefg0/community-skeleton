@@ -15,13 +15,13 @@ RUN apt-get update && apt-get -y upgrade \
         unzip \
         apache2 \
         mysql-server \
-        php7.4 \
-        libapache2-mod-php7.4 \
-        php7.4-common \
-        php7.4-xml \
-        php7.4-imap \
-        php7.4-mysql \
-        php7.4-mailparse \
+        php8.0 \
+        libapache2-mod-php8.0 \
+        php8.0-common \
+        php8.0-xml \
+        php8.0-imap \
+        php8.0-mysql \
+        php8.0-mailparse \
         ca-certificates; \
     if ! command -v gpg; then \
 		apt-get install -y --no-install-recommends gnupg2 dirmngr; \
@@ -37,7 +37,7 @@ COPY . /var/www/uvdesk/
 
 RUN \
     # Update apache configurations
-    a2enmod php7.4 rewrite; \
+    a2enmod php8.0 rewrite; \
     chmod +x /usr/local/bin/uvdesk-entrypoint.sh; \
     # Install gosu for stepping-down from root to a non-privileged user during container startup
     dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')"; \
@@ -74,8 +74,18 @@ RUN \
         /var/www/html \
         /var/www/uvdesk/.docker;
 
+
+WORKDIR /var/www/uvdesk
+RUN php bin/console d:s:u --force
+RUN composer self-update
+RUN composer install
+RUN composer update
 # Change working directory to uvdesk source
 WORKDIR /var/www
+
+RUN chmod 777 -R /var/www/uvdesk/config
+RUN chmod 777 -R /var/www/uvdesk/var
+RUN chmod 777 -R /var/www/uvdesk/public
 
 ENTRYPOINT ["uvdesk-entrypoint.sh"]
 CMD ["/bin/bash"]
